@@ -2,3 +2,5 @@
 config.py
 newData.xlsx
 scriptData.xlsx
+__pycache__/
+```

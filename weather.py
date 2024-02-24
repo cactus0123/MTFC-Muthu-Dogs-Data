@@ -33,9 +33,11 @@ dates = [
     "2023-12-31",
 ]
 
+counter = 0
+
 
 def get_precip(index, row):
-    if index < 914:
+    if index < 1366:
         return row
 
     rainfallTotal = 0
@@ -46,16 +48,22 @@ def get_precip(index, row):
         startDate = dates[i]
         endDate = dates[i + 1]
         api_url = f"https://atlas.microsoft.com/weather/historical/actuals/daily/json?api-version=1.1&query={coordinates}&startDate={startDate}&endDate={endDate}&subscription-key={config.AZURE_API_KEY}"
+
         response = requests.get(api_url)
-        response.raise_for_status()
+        if response.status_code != 200:
+            print(f"Error on row {index}: {response.status_code}")
+            df.to_excel("scriptData.xlsx", index=False)
+            return row
+
         data = json.loads(response.text)
         weatherdf = pd.DataFrame(data)
         for i in range(len(weatherdf["results"])):
-            rainfallTotal += weatherdf["results"][i]["precipitation"]["value"]
+            if weatherdf["results"][i].get("precipitation") is not None:
+                rainfallTotal += weatherdf["results"][i]["precipitation"]["value"]
             if weatherdf["results"][i].get("snowfall") is not None:
                 snowfallTotal += weatherdf["results"][i]["snowfall"]["value"]
         print(
-            f"Weather for {row['city']}, {row['state_id']} from {startDate} to {endDate} found: {rainfallTotal} inches of precipitation"
+            f"Row {index}: Weather for {row['city']}, {row['state_id']} from {startDate} to {endDate} found: {rainfallTotal} inches of precipitation"
         )
 
     df.at[index, "Average Precipitation"] = rainfallTotal / 365
@@ -65,14 +73,14 @@ def get_precip(index, row):
         f"\nAverage precipitation for {row['city']}, {row['state_id']} is {rainfallTotal / 365} inches\n"
     )
 
-    # Save the updated DataFrame to an Excel file
-    df.to_excel("scriptData.xlsx", index=False)
+    if counter <= 100:
+        counter += 1
+    else:
+        counter = 0
+        df.to_excel("scriptData.xlsx", index=False)
+
     return row
 
 
-# Apply the geocoding function and save after each row
-chunk_size = 1000
-for i in range(0, len(df), chunk_size):
-    chunk = df.iloc[i : i + chunk_size]
-    chunk.apply(lambda row: get_precip(row.name, row), axis=1)
-    chunk.to_excel("scriptData.xlsx", index=False)
+df.apply(lambda row: get_precip(row.name, row), axis=1)
+df.to_excel("scriptData.xlsx", index=False)
