@@ -37,6 +37,8 @@ def get_weather(index, row):
 
 
 # Apply the geocoding function and save after each row
-df.apply(lambda row: get_weather(row.name, row), axis=1)
-
-df.to_excel("scriptData.xlsx", index=False)
+chunk_size = 1000
+for i in range(0, len(df), chunk_size):
+    chunk = df.iloc[i : i + chunk_size]
+    chunk.apply(lambda row: get_weather(row.name, row), axis=1)
+    chunk.to_excel("scriptData.xlsx", index=False)
