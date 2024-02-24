@@ -14,6 +14,7 @@ def get_weather(index, row):
     latitude = df.at[index, "lat"]
     longitude = df.at[index, "lng"]
 
+    print("Fetching Data")
     api_url = f"https://history.openweathermap.org/data/2.5/aggregated/year?lat={latitude}&lon={longitude}&appid={config.OPENWEATHER_API_KEY}"
     response = requests.get(api_url)
     response.raise_for_status()
@@ -21,6 +22,7 @@ def get_weather(index, row):
     data = json.loads(response.text)
     weatherdf = pd.DataFrame(data)
 
+    print("Summing up the data")
     for i in range(len(weatherdf["result"])):
         rainfallTotal += weatherdf["result"][i]["precipitation"]["mean"]
         cloudTotal += weatherdf["result"][i]["clouds"]["mean"]
@@ -31,11 +33,10 @@ def get_weather(index, row):
     print(
         f"\nAverage precipitation for {row['city']}, {row['state_id']} is {rainfallTotal / 365} inches\n"
     )
-
-    # Save the updated DataFrame to an Excel file
-    df.to_excel("scriptData.xlsx", index=False)
     return row
 
 
 # Apply the geocoding function and save after each row
 df.apply(lambda row: get_weather(row.name, row), axis=1)
+
+df.to_excel("scriptData.xlsx", index=False)
