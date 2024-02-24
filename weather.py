@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 import json
-from config import AZURE_API_KEY
+import config
 
 # Load your spreadsheet
 df = pd.read_excel("newData.xlsx")
@@ -45,7 +45,7 @@ def get_precip(index, row):
     for i in range(0, len(dates), 2):
         startDate = dates[i]
         endDate = dates[i + 1]
-        api_url = f"https://atlas.microsoft.com/weather/historical/actuals/daily/json?api-version=1.1&query={coordinates}&startDate={startDate}&endDate={endDate}&subscription-key={AZURE_API_KEY}"
+        api_url = f"https://atlas.microsoft.com/weather/historical/actuals/daily/json?api-version=1.1&query={coordinates}&startDate={startDate}&endDate={endDate}&subscription-key={config.AZURE_API_KEY}"
         response = requests.get(api_url)
         response.raise_for_status()
         data = json.loads(response.text)
