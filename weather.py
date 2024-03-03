@@ -37,9 +37,6 @@ counter = 0
 
 
 def get_precip(index, row):
-    if index < 1366:
-        return row
-
     rainfallTotal = 0
     snowfallTotal = 0
     coordinates = f"{df.at[index, 'lat']}, {df.at[index, 'lng']}"
